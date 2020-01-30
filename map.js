@@ -57,7 +57,7 @@
        ******************************************************************/
       // Map
       var map = new Map({
-                basemap: "hybrid",
+                basemap: "topo",
                 ground: "world-elevation",
             });
       
@@ -66,7 +66,7 @@
                 container: "mapViewDiv",
                 map: map,
                 center: [-112.884, 38.502],
-                zoom: 13,
+                zoom: 14.5,
                 padding: {
                     top: 50,
                     bottom: 0
@@ -134,6 +134,7 @@ mapView.ui.add(locateWidget, "top-left");
             landownership = new FeatureLayer ({
                 url: "https://services.arcgis.com/ZzrwjTRez6FJiOq4/arcgis/rest/services/FORGE_Webmap2020_View/FeatureServer/0",
                 title: "Land Ownership",
+                opacity: .3,
                 elevationInfo: [{
                     mode: "on-the-ground"
                 }],
@@ -296,6 +297,7 @@ mapView.ui.add(locateWidget, "top-left");
 
             thermalData = new GroupLayer ({
                 title: "Thermal Data",
+                visible: false,
                 layers: [iso1km, iso2km, iso3km, iso4km, heatflow, shallowWells, intermediateWells, deepWells]
             });
 
@@ -307,6 +309,12 @@ mapView.ui.add(locateWidget, "top-left");
                 infrastructure = new GroupLayer ({
                     title: "FORGE Infrastructure",
                     layers: [power, office, boundary]
+                });
+
+                seismicData = new GroupLayer ({
+                    title: "Seismic Data",
+                    visible: false,
+                    layers: [seismoms, seismicity]
                 });
 
                 // geology = new MapImageLayer ({
@@ -399,12 +407,19 @@ mapView.ui.add(locateWidget, "top-left");
                     title: "Geology",
                     layers: [geologicUnits, geologicLines, geologicSymbols, geologicLabels]
                 });
+
+                water = new GroupLayer ({
+                    title: "Groundwater",
+                    visible: false,
+                    layers: [waterLevel, waterChemistry]
+                });
      
-            
+            mapView.map.add(water);
+            mapView.map.add(seismicData);    
             mapView.map.add(thermalData);
             mapView.map.add(geography);
-            mapView.map.add(infrastructure);
             mapView.map.add(geology);
+            mapView.map.add(infrastructure);
 
 
 
@@ -458,7 +473,51 @@ mapView.ui.add(locateWidget, "top-left");
                                     layer = landownership;
                                 } else if (title === "Wells") {
                                     layer = wells;
-                                } 
+                                } else if (title === "Geologic Units") {
+                                    layer = geologicUnits;
+                                } else if (title === "Roads") {
+                                    layer = roads;
+                                } else if (title === "PLSS") {
+                                    layer = plss;
+                                } else if (title === "Field Office") {
+                                    layer = office;
+                                } else if (title === "Power Line") {
+                                    layer = power;
+                                } else if (title === "Water Levels") {
+                                    layer = waterLevel;
+                                } else if (title === "Water Chemistry") {
+                                    layer = waterChemistry;
+                                } else if (title === "Seismometers") {
+                                    layer = seismoms;
+                                } else if (title === "Seismicity 1850 to 2016") {
+                                    layer = seismicity;
+                                } else if (title === "Benchmarks") {
+                                    layer = benchmarks;
+                                } else if (title === "Isotherms at 1km depth") {
+                                    layer = iso1km;
+                                } else if (title === "Isotherms at 2km depth") {
+                                    layer = iso2km;
+                                } else if (title === "Isotherms at 3km depth") {
+                                    layer = iso3km;
+                                } else if (title === "Isotherms at 4km depth") {
+                                    layer = iso4km;
+                                } else if (title === "Heat Flow Isotherms") {
+                                    layer = heatflow;
+                                } else if (title === "Shallow Well Temperatures") {
+                                    layer = shallowWells;
+                                } else if (title === "Intermediate Well Temperatures") {
+                                    layer = intermediateWells;
+                                } else if (title === "Deep Well Temperatures") {
+                                    layer = deepWells;
+                                } else if (title === "Geologic Lines") {
+                                    layer = geologicLines;
+                                } else if (title === "Geologic Labels") {
+                                    layer = geologicLabels;
+                                } else if (title === "Geologic Symbols") {
+                                    layer = geologicSymbols;
+                                }
+
+
                 if (id === "information") {
                 
                   // if the information action is triggered, then
