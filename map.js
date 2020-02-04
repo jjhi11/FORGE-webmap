@@ -435,11 +435,11 @@ mapView.ui.add(locateWidget, "top-left");
                             open: true
                         }
                         item.actionsSections = [
-                            [{
-                                title: "Layer information",
-                                className: "esri-icon-description",
-                                id: "information"
-                            }],
+                            // [{
+                            //     title: "Layer information",
+                            //     className: "esri-icon-description",
+                            //     id: "information"
+                            // }],
                             [{
                                 title: "Increase opacity",
                                 className: "esri-icon-up",
