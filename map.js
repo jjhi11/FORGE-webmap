@@ -6,6 +6,8 @@
       "esri/views/MapView",
       "esri/views/SceneView",
       "esri/layers/FeatureLayer",
+      "esri/layers/SceneLayer",
+      "esri/layers/ElevationLayer",
       "esri/layers/ImageryLayer",
       "esri/layers/MapImageLayer",
       "esri/layers/GroupLayer",
@@ -49,7 +51,7 @@
       "calcite-maps/calcitemaps-arcgis-support-v0.10",
       "dojo/query",
       "dojo/domReady!"
-    ], function(Map, MapView, SceneView, FeatureLayer, ImageryLayer, MapImageLayer, GroupLayer, watchUtils, DimensionalDefinition, MosaicRule, Home, Zoom, Compass, Search, Legend, SketchViewModel, BasemapToggle, ScaleBar, Attribution, LayerList, Locate, NavigationToggle, GraphicsLayer, SimpleFillSymbol, Graphic, FeatureSet, Query, QueryTask, Memory, ObjectStore, ItemFileReadStore, DataGrid, OnDemandGrid, Selection, List, Collapse, Dropdown, CalciteMaps, CalciteMapArcGISSupport, query) {
+    ], function(Map, MapView, SceneView, FeatureLayer, SceneLayer, ElevationLayer, ImageryLayer, MapImageLayer, GroupLayer, watchUtils, DimensionalDefinition, MosaicRule, Home, Zoom, Compass, Search, Legend, SketchViewModel, BasemapToggle, ScaleBar, Attribution, LayerList, Locate, NavigationToggle, GraphicsLayer, SimpleFillSymbol, Graphic, FeatureSet, Query, QueryTask, Memory, ObjectStore, ItemFileReadStore, DataGrid, OnDemandGrid, Selection, List, Collapse, Dropdown, CalciteMaps, CalciteMapArcGISSupport, query) {
       /******************************************************************
        *
        * Create the map, view and widgets
@@ -58,7 +60,12 @@
       // Map
       var map = new Map({
                 basemap: "topo",
-                ground: "world-elevation",
+                //ground: "world-elevation",
+                ground: {
+                    navigationConstraint: {
+                      type: "none"
+                    }
+                  }
             });
       
       // View
@@ -71,6 +78,7 @@
                     top: 50,
                     bottom: 0
                 },
+                viewingMode: "local",
                 // highlightOptions: {
                 //     color: [255, 255, 0, 1],
                 //     haloColor: "white",
@@ -121,13 +129,13 @@ mapView.ui.add(locateWidget, "top-left");
 
 
 
+        bedrockElevation = new ElevationLayer ({
+            url: "https://tiles.arcgis.com/tiles/ZzrwjTRez6FJiOq4/arcgis/rest/services/FORGE_SurfaceTin_WTL1/MapServer/1"
+        })
 
-
- //popup templates for all layers
-
-
-
-
+        bedrockSymbology = new SceneLayer ({
+            url: "https://tiles.arcgis.com/tiles/ZzrwjTRez6FJiOq4/arcgis/rest/services/FORGE_SurfaceTin_WTL1/MapServer/1"
+        })
 
 
 
@@ -413,11 +421,18 @@ mapView.ui.add(locateWidget, "top-left");
                     visible: false,
                     layers: [waterLevel, waterChemistry]
                 });
+
+                subSurface = new GroupLayer ({
+                    title: "Subsurface Gelogic Data",
+                    visible: false,
+                    layers: [bedrockElevation, bedrockSymbology]
+                });
      
             mapView.map.add(water);
             mapView.map.add(seismicData);    
             mapView.map.add(thermalData);
             mapView.map.add(geography);
+            mapView.map.add(subSurface);
             mapView.map.add(geology);
             mapView.map.add(infrastructure);
 
