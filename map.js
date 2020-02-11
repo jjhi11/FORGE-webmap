@@ -10,7 +10,9 @@
       "esri/layers/ElevationLayer",
       "esri/layers/ImageryLayer",
       "esri/layers/MapImageLayer",
+      "esri/layers/TileLayer",
       "esri/layers/GroupLayer",
+      "esri/Ground",
       "esri/core/watchUtils",
       "esri/layers/support/DimensionalDefinition",
       "esri/layers/support/MosaicRule",
@@ -51,21 +53,32 @@
       "calcite-maps/calcitemaps-arcgis-support-v0.10",
       "dojo/query",
       "dojo/domReady!"
-    ], function(Map, MapView, SceneView, FeatureLayer, SceneLayer, ElevationLayer, ImageryLayer, MapImageLayer, GroupLayer, watchUtils, DimensionalDefinition, MosaicRule, Home, Zoom, Compass, Search, Legend, SketchViewModel, BasemapToggle, ScaleBar, Attribution, LayerList, Locate, NavigationToggle, GraphicsLayer, SimpleFillSymbol, Graphic, FeatureSet, Query, QueryTask, Memory, ObjectStore, ItemFileReadStore, DataGrid, OnDemandGrid, Selection, List, Collapse, Dropdown, CalciteMaps, CalciteMapArcGISSupport, query) {
+    ], function(Map, MapView, SceneView, FeatureLayer, SceneLayer, ElevationLayer, ImageryLayer, MapImageLayer, TileLayer, GroupLayer, Ground, watchUtils, DimensionalDefinition, MosaicRule, Home, Zoom, Compass, Search, Legend, SketchViewModel, BasemapToggle, ScaleBar, Attribution, LayerList, Locate, NavigationToggle, GraphicsLayer, SimpleFillSymbol, Graphic, FeatureSet, Query, QueryTask, Memory, ObjectStore, ItemFileReadStore, DataGrid, OnDemandGrid, Selection, List, Collapse, Dropdown, CalciteMaps, CalciteMapArcGISSupport, query) {
       /******************************************************************
        *
        * Create the map, view and widgets
        * 
        ******************************************************************/
+
+      var worldElevation = ElevationLayer({
+        url: "//elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+      });
+    
+    
+            bedrockElevation = new ElevationLayer ({
+                url: "https://tiles.arcgis.com/tiles/ZzrwjTRez6FJiOq4/arcgis/rest/services/ForgeRasterFromTin/ImageServer"
+            });
+
       // Map
       var map = new Map({
                 basemap: "topo",
                 //ground: "world-elevation",
-                ground: {
-                    navigationConstraint: {
-                      type: "none"
-                    }
-                  }
+                ground: new Ground({
+                    layers: [ worldElevation, bedrockElevation ],
+                        navigationConstraint: {
+                          type: "none"
+                        }
+                   })
             });
       
       // View
@@ -128,14 +141,13 @@ mapView.ui.add(locateWidget, "top-left");
 
 
 
-
-        bedrockElevation = new ElevationLayer ({
-            url: "https://tiles.arcgis.com/tiles/ZzrwjTRez6FJiOq4/arcgis/rest/services/FORGE_SurfaceTin_WTL1/MapServer/1"
-        })
-
-        bedrockSymbology = new SceneLayer ({
-            url: "https://tiles.arcgis.com/tiles/ZzrwjTRez6FJiOq4/arcgis/rest/services/FORGE_SurfaceTin_WTL1/MapServer/1"
-        })
+        bedrockSymbology = new TileLayer ({
+            url: "https://tiles.arcgis.com/tiles/ZzrwjTRez6FJiOq4/arcgis/rest/services/FORGE_SurfaceTin_WTL1/MapServer/0",
+            title: "Subsurface Bedrock",
+            // elevationInfo: [{
+            //     mode: "on-the-ground"
+            // }],
+        });
 
 
 
@@ -425,7 +437,7 @@ mapView.ui.add(locateWidget, "top-left");
                 subSurface = new GroupLayer ({
                     title: "Subsurface Gelogic Data",
                     visible: false,
-                    layers: [bedrockElevation, bedrockSymbology]
+                    layers: [bedrockSymbology]
                 });
      
             mapView.map.add(water);
@@ -433,6 +445,7 @@ mapView.ui.add(locateWidget, "top-left");
             mapView.map.add(thermalData);
             mapView.map.add(geography);
             mapView.map.add(subSurface);
+            mapView.map.ground.layers.add(bedrockElevation);
             mapView.map.add(geology);
             mapView.map.add(infrastructure);
 
