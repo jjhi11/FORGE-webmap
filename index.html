@@ -27,6 +27,53 @@
       width: 100%;
     }
 
+    #screenshotDiv {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+      }
+
+      .hide {
+        display: none;
+      }
+
+      img {
+        border: 10px solid white;
+        box-shadow: 2px 2px 5px 0 rgba(0, 0, 0, 0.5);
+      }
+
+      #screenshotDiv > * {
+        margin: 0.5em;
+      }
+
+      .screenshotCursor {
+        cursor: crosshair;
+      }
+
+      .action-button {
+        padding: 0.6em;
+        border: 1px solid #0079c1;
+        text-align: center;
+        background-color: white;
+        cursor: pointer;
+      }
+
+      .action-button:hover,
+      .action-button:focus {
+        background: #0079c1;
+        color: white;
+      }
+
+      #maskDiv {
+        position: absolute;
+        background: rgba(255, 51, 0, 0.1);
+        border: 2px dashed rgb(255, 51, 0);
+      }
+
 .modal {
   display: none;
   position: fixed;
@@ -104,7 +151,7 @@ div.esri-legend__message {
         <li><a role="menuitem" tabindex="0" data-target="#panelInfo" aria-haspopup="true"><span class="glyphicon glyphicon-info-sign"></span> FORGE Overview</a></li>
         <li><a role="menuitem" tabindex="0" href="#" data-target="#panelLegend" aria-haspopup="true"><span class="glyphicon glyphicon-list-alt"></span> Legend</a></li>
         <li><a role="menuitem" tabindex="0" href="#" data-target="#panelBasemaps" aria-haspopup="true"><span class="esri-icon-basemap"></span> Basemaps</a></li>
-        <!-- <li><a role="menuitem" tabindex="0" href="#" data-target="#panelReport" aria-haspopup="true"><span class="esri-icon-documentation"></span> Generate Report</a></li> -->
+        <li><a role="menuitem" tabindex="0" href="#" data-target="#panelScreenshot" aria-haspopup="true"><span class="esri-icon-documentation"></span> Screenshot</a></li>
         <!-- <li><a role="menuitem" tabindex="0" data-target="#panelDisclaimer" aria-haspopup="true"><span class="glyphicon glyphicon-warning-sign"></span> Geologic</a></li> -->
         <!-- <li><a role="menuitem" tabindex="0" data-target="#panelDatabase" aria-haspopup="true"><span class="glyphicon glyphicon-list-alt"></span> Database Contents</a></li>
         <li><a role="menuitem" tabindex="0" data-target="#panelAcknowledgments" aria-haspopup="true"><span class="glyphicon glyphicon-user"></span> Acknowledgments</a></li>
@@ -174,27 +221,23 @@ div.esri-legend__message {
       </div>
     </div>
 
-        <!-- Panel - Reports -->
+        <!-- Panel - Screenshot -->
 
-        <div id="panelReport" class="panel collapse">
-            <div id="headingReport" class="panel-heading" role="tab">
+        <div id="panelScreenshot" class="panel collapse">
+            <div id="headingScreenshot" class="panel-heading" role="tab">
               <div class="panel-title">
-                <a class="panel-toggle" role="button" data-toggle="collapse" href="#collapseReport" aria-expanded="false" aria-controls="collapseReport"><span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span><span class="panel-label">Report Generator</span></a> 
-                <a class="panel-close" role="button" data-toggle="collapse" tabindex="0" href="#panelReport"><span class="esri-icon esri-icon-close" aria-hidden="true"></span></a> 
+                <a class="panel-toggle" role="button" data-toggle="collapse" href="#collapseScreenshot" aria-expanded="false" aria-controls="collapseScreenshot"><span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span><span class="panel-label">Screenshot</span></a> 
+                <a class="panel-close" role="button" data-toggle="collapse" tabindex="0" href="#panelScreenshot"><span class="esri-icon esri-icon-close" aria-hidden="true"></span></a> 
               </div>
             </div>
-            <div id="collapseReport" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingReport">
+            <div id="collapseScreenshot" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingScreenshot">
               <div class="panel-body">            
-                <div id="reportDiv">
-                  <b>Generate a Report of the Current Map Extent.</b>
-                  <p><button class="action-button esri-icon-documentation" id="currentButton" type="button"
-                                  title="Current Extents"></button></p>
-                                <p><b>Draw a Custom Area of Interest</b></p>
-                                <p><button class="action-button esri-icon-polygon" id="polygonButton" type="button"
-                                  title="Draw polygon"></button> Click to draw a polygon over the area you would like to generate a report.</p>
-                                <p><button class="action-button esri-icon-down-arrow-circled" id="DownloadButton" type="button"
-                                  title="Download"></button> Click to generate report.</p>
-                                <p><button class="action-button esri-icon-trash" id="resetBtn" type="button" title="Clear graphics"></button> Reset the selected polygon area.</p>
+                <div id="shotDiv">
+                  <b>Generate a Screenshot</b>
+                  
+                                <p><button class="action-button esri-icon-polygon" id="screenshotBtn" ari-label="Select Screenshot Area"
+                                  title="Select Screenshot Area"></button> Click to draw a polygon over the area to take a screenshot.</p>
+                                
                 </div>
               </div>
             </div>
@@ -346,8 +389,32 @@ div.esri-legend__message {
   <div class="modal-content">
     <p>Poop</p>
   </div>
-</div>
 
+</div>
+<div id="screenshotDiv" class="hide">
+      <img class="js-screenshot-image" />
+      <div>
+        <label>Set a text to be displayed on the image: </label
+        ><input type="text" placeholder="Image text" id="textInput" autofocus />
+      </div>
+      <button
+        id="downloadBtn"
+        class="action-button"
+        aria-label="Download image"
+        title="Download image"
+      >
+        Download image
+      </button>
+      <button
+        id="closeBtn"
+        class="action-button"
+        aria-label="Back to map"
+        title="Back to map"
+      >
+        Back to map
+      </button>
+    </div>
+    <div id="maskDiv" class="hide screenshotCursor"></div>
 
 
 

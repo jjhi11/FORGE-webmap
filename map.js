@@ -10,7 +10,7 @@
       "esri/layers/ElevationLayer",
       "esri/layers/ImageryLayer",
       "esri/layers/MapImageLayer",
-      "esri/layers/TileLayer",
+      "esri/layers/SceneLayer",
       "esri/layers/GroupLayer",
       "esri/Ground",
       "esri/core/watchUtils",
@@ -53,7 +53,7 @@
       "calcite-maps/calcitemaps-arcgis-support-v0.10",
       "dojo/query",
       "dojo/domReady!"
-    ], function(Map, MapView, SceneView, FeatureLayer, SceneLayer, ElevationLayer, ImageryLayer, MapImageLayer, TileLayer, GroupLayer, Ground, watchUtils, DimensionalDefinition, MosaicRule, Home, Zoom, Compass, Search, Legend, SketchViewModel, BasemapToggle, ScaleBar, Attribution, LayerList, Locate, NavigationToggle, GraphicsLayer, SimpleFillSymbol, Graphic, FeatureSet, Query, QueryTask, Memory, ObjectStore, ItemFileReadStore, DataGrid, OnDemandGrid, Selection, List, Collapse, Dropdown, CalciteMaps, CalciteMapArcGISSupport, query) {
+    ], function(Map, MapView, SceneView, FeatureLayer, SceneLayer, ElevationLayer, ImageryLayer, MapImageLayer, SceneLayer, GroupLayer, Ground, watchUtils, DimensionalDefinition, MosaicRule, Home, Zoom, Compass, Search, Legend, SketchViewModel, BasemapToggle, ScaleBar, Attribution, LayerList, Locate, NavigationToggle, GraphicsLayer, SimpleFillSymbol, Graphic, FeatureSet, Query, QueryTask, Memory, ObjectStore, ItemFileReadStore, DataGrid, OnDemandGrid, Selection, List, Collapse, Dropdown, CalciteMaps, CalciteMapArcGISSupport, query) {
       /******************************************************************
        *
        * Create the map, view and widgets
@@ -74,7 +74,7 @@
                 basemap: "topo",
                 //ground: "world-elevation",
                 ground: new Ground({
-                    layers: [ worldElevation, bedrockElevation ],
+                    layers: [ worldElevation  ],
                         navigationConstraint: {
                           type: "none"
                         }
@@ -91,7 +91,7 @@
                     top: 50,
                     bottom: 0
                 },
-                viewingMode: "local",
+                //viewingMode: "local",
                 // highlightOptions: {
                 //     color: [255, 255, 0, 1],
                 //     haloColor: "white",
@@ -141,9 +141,10 @@ mapView.ui.add(locateWidget, "top-left");
 
 
 
-        bedrockSymbology = new TileLayer ({
-            url: "https://tiles.arcgis.com/tiles/ZzrwjTRez6FJiOq4/arcgis/rest/services/FORGE_SurfaceTin_WTL1/MapServer/0",
+        bedrockSymbology = new SceneLayer ({
+            url: "https://services.arcgis.com/ZzrwjTRez6FJiOq4/arcgis/rest/services/ExtrudeBetweenTest_WSL1/SceneServer",
             title: "Subsurface Bedrock",
+            opacity: 0.4,
             // elevationInfo: [{
             //     mode: "on-the-ground"
             // }],
@@ -445,7 +446,7 @@ mapView.ui.add(locateWidget, "top-left");
             mapView.map.add(thermalData);
             mapView.map.add(geography);
             mapView.map.add(subSurface);
-            mapView.map.ground.layers.add(bedrockElevation);
+            //mapView.map.ground.layers.add(bedrockElevation);
             mapView.map.add(geology);
             mapView.map.add(infrastructure);
 
@@ -594,8 +595,203 @@ mapView.ui.add(locateWidget, "top-left");
                             }
                         });
 
-   
+    // watch for when the screenshot panel is open
 
+    // query(".calcite-panels .panel .panel-collapse").on("show.bs.collapse", function() {
+    //     console.log("Screenshot Panel Open");
+
+    // });
+
+//screenshot code
+
+// the button that triggers area selection mode
+const screenshotBtn = document.getElementById("screenshotBtn");
+
+// the orange mask used to select the area
+const maskDiv = document.getElementById("maskDiv");
+
+// element where we display the print preview
+const screenshotDiv = document.getElementById("screenshotDiv");
+
+
+// add an event listener to trigger the area selection mode
+screenshotBtn.addEventListener("click", function() {
+  screenshotBtn.classList.add("active");
+  mapView.container.classList.add("screenshotCursor");
+  let area = null;
+
+  // listen for drag events and compute the selected area
+  const dragHandler = mapView.on("drag", function(event) {
+    // prevent navigation in the view
+    event.stopPropagation();
+
+    // when the user starts dragging or is dragging
+    if (event.action !== "end") {
+      // calculate the extent of the area selected by dragging the cursor
+      const xmin = clamp(
+        Math.min(event.origin.x, event.x),
+        0,
+        mapView.width
+      );
+      const xmax = clamp(
+        Math.max(event.origin.x, event.x),
+        0,
+        mapView.width
+      );
+      const ymin = clamp(
+        Math.min(event.origin.y, event.y),
+        0,
+        mapView.height
+      );
+      const ymax = clamp(
+        Math.max(event.origin.y, event.y),
+        0,
+        mapView.height
+      );
+      area = {
+        x: xmin,
+        y: ymin,
+        width: xmax - xmin,
+        height: ymax - ymin
+      };
+      // set the position of the div element that marks the selected area
+      setMaskPosition(area);
+    }
+    // when the user stops dragging
+    else {
+      // remove the drag event listener from the SceneView
+      dragHandler.remove();
+      // the screenshot of the selected area is taken
+      mapView
+        .takeScreenshot({ area: area, format: "png" })
+        .then(function(screenshot) {
+          // display a preview of the image
+          showPreview(screenshot);
+
+          // create the image for download
+          document.getElementById("downloadBtn").onclick = function() {
+            const text = document.getElementById("textInput").value;
+            // if a text exists, then add it to the image
+            if (text) {
+              const dataUrl = getImageWithText(screenshot, text);
+              downloadImage(
+                "FORGE_Screenshot.png",
+                dataUrl
+              );
+            }
+            // otherwise download only the webscene screenshot
+            else {
+              downloadImage(
+                "FORGE_Screenshot.png",
+                screenshot.dataUrl
+              );
+            }
+          };
+
+          // the screenshot mode is disabled
+          screenshotBtn.classList.remove("active");
+          mapView.container.classList.remove("screenshotCursor");
+          setMaskPosition(null);
+        });
+    }
+  });
+
+  function setMaskPosition(area) {
+    if (area) {
+      maskDiv.classList.remove("hide");
+      maskDiv.style.left = area.x + "px";
+      maskDiv.style.top = area.y + "px";
+      maskDiv.style.width = area.width + "px";
+      maskDiv.style.height = area.height + "px";
+    } else {
+      maskDiv.classList.add("hide");
+    }
+  }
+
+  function clamp(value, from, to) {
+    return value < from ? from : value > to ? to : value;
+  }
+});
+
+// creates an image that will be appended to the DOM
+// so that users can have a preview of what they will download
+function showPreview(screenshot) {
+    console.log(screenshot);
+  screenshotDiv.classList.remove("hide");
+  // add the screenshot dataUrl as the src of an image element
+  const screenshotImage = document.getElementsByClassName(
+    "js-screenshot-image"
+  )[0];
+  screenshotImage.width = screenshot.data.width;
+  screenshotImage.height = screenshot.data.height;
+  screenshotImage.src = screenshot.dataUrl;
+}
+
+// returns a new image created by adding a custom text to the webscene image
+function getImageWithText(screenshot, text) {
+  const imageData = screenshot.data;
+
+  // to add the text to the screenshot we create a new canvas element
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  canvas.height = imageData.height;
+  canvas.width = imageData.width;
+
+  // add the screenshot data to the canvas
+  context.putImageData(imageData, 0, 0);
+  context.font = "20px Arial";
+  context.fillStyle = "#000";
+  context.fillRect(
+    0,
+    imageData.height - 40,
+    context.measureText(text).width + 20,
+    30
+  );
+
+  // add the text from the textInput element
+  context.fillStyle = "#fff";
+  context.fillText(text, 10, imageData.height - 20);
+
+  return canvas.toDataURL();
+}
+
+function downloadImage(filename, dataUrl) {
+  // the download is handled differently in Microsoft browsers
+  // because the download attribute for <a> elements is not supported
+  if (!window.navigator.msSaveOrOpenBlob) {
+    // in browsers that support the download attribute
+    // a link is created and a programmatic click will trigger the download
+    const element = document.createElement("a");
+    element.setAttribute("href", dataUrl);
+    element.setAttribute("download", filename);
+    element.style.display = "none";
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  } else {
+    // for MS browsers convert dataUrl to Blob
+    const byteString = atob(dataUrl.split(",")[1]);
+    const mimeString = dataUrl
+      .split(",")[0]
+      .split(":")[1]
+      .split(";")[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: mimeString });
+
+    // download file
+    window.navigator.msSaveOrOpenBlob(blob, filename);
+  }
+}
+// button to hide the print preview html element
+document
+  .getElementById("closeBtn")
+  .addEventListener("click", function() {
+    screenshotDiv.classList.add("hide");
+  });
 
 
 
