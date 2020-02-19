@@ -648,12 +648,14 @@ screenshotBtn.addEventListener("click", function() {
         0,
         mapView.height
       );
+      var pixelRatio = 2;
       area = {
         x: xmin,
         y: ymin,
-        width: xmax - xmin,
-        height: ymax - ymin
+        width: (xmax - xmin) * pixelRatio,
+        height: (ymax - ymin) * pixelRatio
       };
+      console.log(area);
       // set the position of the div element that marks the selected area
       setMaskPosition(area);
     }
